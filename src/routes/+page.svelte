@@ -24,12 +24,12 @@
 </svelte:head>
 
 <!-- Hero Section -->
-<section class="min-h-[80vh] flex flex-col items-center justify-center px-4 py-16 bg-love-gradient relative overflow-hidden">
+<section class="min-h-[80vh] flex flex-col items-center justify-center px-3 sm:px-4 py-10 sm:py-16 bg-love-gradient relative overflow-hidden">
 	<!-- Decorative elements -->
-	<div class="absolute top-10 left-10 text-6xl opacity-20 animate-bounce-cute" aria-hidden="true">💖</div>
-	<div class="absolute top-20 right-16 text-4xl opacity-15 animate-pulse-heart" aria-hidden="true">🌸</div>
-	<div class="absolute bottom-20 left-20 text-5xl opacity-20 animate-bounce-cute" style="animation-delay: 1s;" aria-hidden="true">💕</div>
-	<div class="absolute bottom-32 right-10 text-4xl opacity-15 animate-pulse-heart" style="animation-delay: 0.5s;" aria-hidden="true">💜</div>
+	<div class="absolute top-10 left-4 sm:left-10 text-4xl sm:text-6xl opacity-20 animate-bounce-cute" aria-hidden="true">💖</div>
+	<div class="absolute top-20 right-4 sm:right-16 text-3xl sm:text-4xl opacity-15 animate-pulse-heart" aria-hidden="true">🌸</div>
+	<div class="absolute bottom-20 left-4 sm:left-20 text-4xl sm:text-5xl opacity-20 animate-bounce-cute" style="animation-delay: 1s;" aria-hidden="true">💕</div>
+	<div class="absolute bottom-32 right-4 sm:right-10 text-3xl sm:text-4xl opacity-15 animate-pulse-heart" style="animation-delay: 0.5s;" aria-hidden="true">💜</div>
 
 	<div class="text-center max-w-3xl mx-auto relative z-10">
 		<!-- Logo / Title -->
@@ -37,22 +37,22 @@
 			<span class="text-7xl" aria-hidden="true">💌</span>
 		</div>
 
-		<h1 class="text-5xl sm:text-6xl md:text-7xl font-dancing text-pink-600 mb-4 leading-tight">
+		<h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-dancing text-pink-600 mb-4 leading-tight">
 			Love Sent
-			<span class="text-4xl sm:text-5xl" aria-hidden="true">💖</span>
+			<span class="text-3xl sm:text-4xl md:text-5xl" aria-hidden="true">💖</span>
 		</h1>
 
-		<p class="text-xl sm:text-2xl text-gray-600 mb-3 font-light">
+		<p class="text-lg sm:text-xl md:text-2xl text-gray-600 mb-3 font-light px-2">
 			Send heartfelt confessions that <strong class="text-pink-500">can't be ignored!</strong> 😍
 		</p>
 
-		<p class="text-base text-gray-500 mb-8 max-w-lg mx-auto">
+		<p class="text-sm sm:text-base text-gray-500 mb-8 max-w-lg mx-auto px-2">
 			Create personalized, ultra-cute proposal pages with playful "No" buttons
 			and celebrate with confetti when they say Yes! 🎉
 		</p>
 
 		<!-- CTA Buttons -->
-		<div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+		<div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-8 sm:mb-12 px-2">
 			{#if data.user}
 				<a href="/create" class="btn btn-primary btn-lg rounded-full shadow-lg glow-pink gap-2 text-lg px-8 hover:scale-105 transition-transform" aria-label="Create a new confession">
 					<Sparkles class="w-5 h-5" aria-hidden="true" />
@@ -74,7 +74,7 @@
 		</div>
 
 		<!-- Demo Card Preview -->
-		<div class="card bg-white/90 backdrop-blur shadow-xl max-w-md mx-auto rounded-3xl border border-pink-100 overflow-hidden card-cute">
+		<div class="card bg-white/90 backdrop-blur shadow-xl max-w-md mx-auto rounded-3xl border border-pink-100 overflow-hidden card-cute mx-2 sm:mx-auto">
 			<div class="card-body items-center text-center p-8">
 				<div class="w-20 h-20 rounded-full bg-gradient-to-br from-pink-200 to-purple-200 flex items-center justify-center mb-3 shadow-md">
 					<span class="text-3xl" aria-hidden="true">😍</span>

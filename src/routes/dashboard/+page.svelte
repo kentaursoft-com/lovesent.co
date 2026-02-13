@@ -45,13 +45,13 @@
 	<meta name="description" content="Manage your love confessions and track who said Yes!" />
 </svelte:head>
 
-<div class="min-h-[80vh] px-4 py-8 bg-love-gradient">
+<div class="min-h-[80vh] px-3 sm:px-4 py-6 sm:py-8 bg-love-gradient">
 	<div class="max-w-6xl mx-auto">
 		<!-- Header -->
-		<div class="text-center mb-10">
-			<h1 class="text-5xl font-dancing text-pink-600 mb-2">Your Love Confessions 💌</h1>
-			<p class="text-gray-500">Track your confessions, see who said Yes, and share the love!</p>
-			<p class="text-sm text-gray-400 mt-1">Logged in as {data.user?.email} 💕</p>
+		<div class="text-center mb-6 sm:mb-10">
+			<h1 class="text-3xl sm:text-4xl md:text-5xl font-dancing text-pink-600 mb-2">Your Love Confessions 💌</h1>
+			<p class="text-gray-500 text-sm sm:text-base">Track your confessions, see who said Yes, and share the love!</p>
+			<p class="text-xs sm:text-sm text-gray-400 mt-1">Logged in as {data.user?.email} 💕</p>
 		</div>
 
 		<!-- Confessions Grid -->

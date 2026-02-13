@@ -202,6 +202,35 @@ h1, h2, h3, .font-dancing {
   transition: all 0.3s ease;
 }
 
+/* ===== Touch-friendly sizing on mobile ===== */
+@media (max-width: 640px) {
+  .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .btn-sm {
+    min-height: 36px;
+    min-width: 36px;
+  }
+  .btn-lg {
+    min-height: 52px;
+  }
+  /* Prevent zoom on input focus (iOS) */
+  input, select, textarea {
+    font-size: 16px;
+  }
+  /* Better tap targets for links */
+  a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  /* Prevent horizontal scroll */
+  body {
+    overflow-x: hidden;
+  }
+}
+
 /* ===== Step Wizard Progress ===== */
 .wizard-step {
   transition: all 0.4s ease;

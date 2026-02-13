@@ -409,7 +409,10 @@
 						</button>
 					{:else}
 						<!-- Submit Form -->
-						<form method="POST" enctype="multipart/form-data" use:enhance={() => {
+						<form method="POST" enctype="multipart/form-data" use:enhance={({ formData }) => {
+							if (photoFile) {
+								formData.set('photo', photoFile);
+							}
 							loading = true;
 							return async ({ update }) => {
 								loading = false;
@@ -422,10 +425,6 @@
 							<input type="hidden" name="noOptions" value={JSON.stringify(selectedNoOptions)} />
 							<input type="hidden" name="extraMessage" value={extraMessage} />
 							<input type="hidden" name="themeColor" value={themeColor} />
-							{#if photoFile}
-								<!-- The file input needs special handling -->
-								<input type="file" name="photo" class="hidden" />
-							{/if}
 							<button
 								type="submit"
 								class="btn btn-primary btn-lg rounded-full gap-2 shadow-lg glow-pink hover:scale-105 transition-transform"

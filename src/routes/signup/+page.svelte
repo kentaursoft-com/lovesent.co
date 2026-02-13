@@ -18,7 +18,7 @@
 	<meta name="description" content="Create your free Love Sent account and start sending adorable confessions!" />
 </svelte:head>
 
-<div class="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-love-gradient">
+<div class="min-h-[80vh] flex items-center justify-center px-3 sm:px-4 py-8 sm:py-12 bg-love-gradient">
 	<div class="card bg-white/95 backdrop-blur shadow-xl rounded-3xl w-full max-w-md border border-pink-100 card-cute">
 		<div class="card-body p-8">
 			<!-- Header -->

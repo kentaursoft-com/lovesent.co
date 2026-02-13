@@ -9,7 +9,7 @@
 	let noClicks = $state(0);
 	let currentNoIndex = $state(0);
 	let yesScale = $state(1);
-	let noPosition = $state({ top: '60%', left: '60%' });
+	let noPosition = $state({ x: 50, y: 50 }); // percentage within the button zone
 	let noScale = $state(1);
 	let noText = $state(c.noOptions[0] || 'No 😢');
 	let accepted = $state(c.accepted || false);
@@ -17,6 +17,7 @@
 	let showPersistentMessage = $state(false);
 	let mounted = $state(false);
 	let containerEl: HTMLDivElement;
+	let buttonZoneEl: HTMLDivElement;
 
 	// Heart emojis for floating animation
 	const heartEmojis = ['❤️', '💖', '💕', '🌸', '💜', '💛', '💗', '💓', '💞', '💝'];
@@ -33,15 +34,12 @@
 		currentNoIndex = (currentNoIndex + 1) % c.noOptions.length;
 		noText = c.noOptions[currentNoIndex];
 
-		// Move the No button to a random position
-		if (containerEl) {
-			const rect = containerEl.getBoundingClientRect();
-			const maxTop = rect.height - 60;
-			const maxLeft = rect.width - 160;
-			const newTop = Math.max(50, Math.random() * maxTop);
-			const newLeft = Math.max(10, Math.random() * maxLeft);
-			noPosition = { top: `${newTop}px`, left: `${newLeft}px` };
-		}
+		// Move the No button to a random position WITHIN the button zone (percentage-based)
+		// Keeps it within 5%-85% range so the button doesn't clip edges
+		noPosition = {
+			x: 5 + Math.random() * 80,
+			y: 5 + Math.random() * 70
+		};
 
 		// Grow Yes button
 		yesScale = 1 + noClicks * 0.12;
@@ -197,7 +195,7 @@
 
 <div
 	bind:this={containerEl}
-	class="min-h-screen flex flex-col items-center justify-center px-4 py-8 relative overflow-hidden"
+	class="min-h-screen flex flex-col items-center px-3 sm:px-4 py-4 sm:py-8 relative overflow-hidden"
 	style="background: linear-gradient(135deg, {c.themeColor || '#fce4ec'} 0%, #f3e5f5 50%, #e8eaf6 100%);"
 >
 	<!-- Floating hearts background -->
@@ -214,31 +212,31 @@
 
 	<!-- Main Confession Content -->
 	{#if !showOverlay}
-		<div class="relative z-10 flex flex-col items-center max-w-lg mx-auto text-center">
+		<div class="relative z-10 flex flex-col items-center w-full max-w-lg mx-auto text-center pt-4 sm:pt-8">
 			<!-- Photo -->
 			{#if c.photoUrl}
 				<img
 					src={c.photoUrl}
 					alt="Special photo for {c.crushName} 💖"
-					class="w-36 h-36 sm:w-48 sm:h-48 rounded-full object-cover border-8 border-white shadow-xl mb-6 animate-pulse-heart"
+					class="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-full object-cover border-[6px] sm:border-8 border-white shadow-xl mb-4 sm:mb-6 animate-pulse-heart"
 				/>
 			{:else}
-				<div class="w-36 h-36 sm:w-48 sm:h-48 rounded-full bg-gradient-to-br from-pink-300 to-purple-300 flex items-center justify-center border-8 border-white shadow-xl mb-6 animate-pulse-heart">
-					<span class="text-6xl" aria-hidden="true">💝</span>
+				<div class="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-full bg-gradient-to-br from-pink-300 to-purple-300 flex items-center justify-center border-[6px] sm:border-8 border-white shadow-xl mb-4 sm:mb-6 animate-pulse-heart">
+					<span class="text-5xl sm:text-6xl" aria-hidden="true">💝</span>
 				</div>
 			{/if}
 
 			<!-- Question -->
-			<h1 class="text-3xl sm:text-4xl md:text-5xl font-dancing text-pink-700 mb-3 leading-tight">
+			<h1 class="text-2xl sm:text-3xl md:text-5xl font-dancing text-pink-700 mb-2 sm:mb-3 leading-tight px-2">
 				{c.crushName},
 			</h1>
-			<h2 class="text-2xl sm:text-3xl md:text-4xl font-dancing text-pink-600 mb-4">
+			<h2 class="text-xl sm:text-2xl md:text-4xl font-dancing text-pink-600 mb-3 sm:mb-4 px-2">
 				{c.questionText} 😍
 			</h2>
 
 			<!-- Extra Message -->
 			{#if c.extraMessage}
-				<p class="text-lg text-gray-600 mb-6 italic bg-white/60 rounded-2xl px-6 py-3 backdrop-blur">
+				<p class="text-base sm:text-lg text-gray-600 mb-4 sm:mb-6 italic bg-white/60 rounded-2xl px-4 sm:px-6 py-2 sm:py-3 backdrop-blur mx-2">
 					"{c.extraMessage}" 💕
 				</p>
 			{/if}
@@ -246,7 +244,7 @@
 			<!-- YES Button -->
 			<button
 				id="yes-btn"
-				class="btn btn-primary btn-lg rounded-full shadow-xl text-xl px-10 mb-6 hover:shadow-2xl glow-pink"
+				class="btn btn-primary btn-lg rounded-full shadow-xl text-lg sm:text-xl px-8 sm:px-10 mb-4 hover:shadow-2xl glow-pink active:scale-95"
 				style="transform: scale({yesScale}); transition: transform 0.4s ease;"
 				onclick={onYesClick}
 				aria-label="Yes! Accept the confession with joy! 💖"
@@ -254,23 +252,36 @@
 				Yes! 💕
 			</button>
 
-			<!-- NO Button (the playful one!) -->
-			{#if mounted}
-				<button
-					id="no-btn"
-					class="btn btn-outline border-pink-300 text-pink-500 rounded-full shadow-md absolute"
-					style="top: {noPosition.top}; left: {noPosition.left}; transform: scale({noScale}); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 20;"
-					onclick={onNoClick}
-					aria-label="No button: Try clicking it... if you can! 😏"
-				>
-					{noText}
-				</button>
-			{/if}
+			<!-- Button Zone — the No button moves ONLY within this safe area -->
+			<div
+				bind:this={buttonZoneEl}
+				class="relative w-full mt-2"
+				style="height: 140px; min-height: 120px;"
+				aria-label="Button zone where the No button moves around"
+			>
+				{#if mounted}
+					<button
+						id="no-btn"
+						class="btn btn-outline border-pink-300 text-pink-500 rounded-full shadow-md absolute whitespace-nowrap touch-manipulation"
+						style="
+							left: {noPosition.x}%;
+							top: {noPosition.y}%;
+							transform: translate(-50%, -50%) scale({noScale});
+							transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+							z-index: 20;
+						"
+						onclick={onNoClick}
+						aria-label="No button: Try clicking it... if you can! 😏"
+					>
+						{noText}
+					</button>
+				{/if}
+			</div>
 
 			<!-- Persistent message after many No clicks -->
 			{#if showPersistentMessage}
-				<div class="mt-4 p-4 bg-white/80 backdrop-blur rounded-2xl shadow-md animate-bounce-cute">
-					<p class="text-pink-600 font-medium">
+				<div class="mt-2 p-3 sm:p-4 bg-white/80 backdrop-blur rounded-2xl shadow-md animate-bounce-cute mx-2">
+					<p class="text-pink-600 font-medium text-sm sm:text-base">
 						Okay, you're persistent! 😂 But Yes is still waiting... 💕
 					</p>
 				</div>
@@ -278,7 +289,7 @@
 
 			<!-- No click counter (subtle) -->
 			{#if noClicks > 0 && noClicks < 15}
-				<p class="text-sm text-pink-400 mt-4 opacity-70" aria-hidden="true">
+				<p class="text-xs sm:text-sm text-pink-400 mt-3 opacity-70" aria-hidden="true">
 					{#if noClicks < 5}
 						The No button is getting nervous! 😅
 					{:else if noClicks < 10}
@@ -293,47 +304,47 @@
 
 	<!-- Acceptance Overlay -->
 	{#if showOverlay}
-		<div id="acceptance-overlay" class="relative z-20 flex flex-col items-center max-w-lg mx-auto text-center animate-bounce-cute">
-			<div class="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-8 sm:p-12 border border-pink-100">
-				<div class="text-6xl mb-4" aria-hidden="true">🎉💖🎉</div>
+		<div id="acceptance-overlay" class="relative z-20 flex flex-col items-center w-full max-w-lg mx-auto text-center animate-bounce-cute my-auto">
+			<div class="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 border border-pink-100 mx-2 w-full">
+				<div class="text-4xl sm:text-6xl mb-3 sm:mb-4" aria-hidden="true">🎉💖🎉</div>
 
-				<h1 class="text-4xl sm:text-5xl font-dancing text-pink-600 mb-4">
+				<h1 class="text-3xl sm:text-4xl md:text-5xl font-dancing text-pink-600 mb-3 sm:mb-4">
 					YAYYYYY! 🥰
 				</h1>
 
-				<h2 class="text-2xl font-dancing text-pink-500 mb-4">
+				<h2 class="text-xl sm:text-2xl font-dancing text-pink-500 mb-3 sm:mb-4">
 					{c.crushName} Accepted! 💖💖💖
 				</h2>
 
-				<p class="text-lg text-gray-600 mb-2">
+				<p class="text-base sm:text-lg text-gray-600 mb-2">
 					You just made someone very happy!
 				</p>
 
-				<p class="text-xl text-pink-500 font-medium mb-6">
+				<p class="text-lg sm:text-xl text-pink-500 font-medium mb-4 sm:mb-6">
 					Your heart just fluttered! 💞
 				</p>
 
 				{#if c.extraMessage}
-					<div class="bg-pink-50 rounded-2xl p-4 mb-6">
-						<p class="text-gray-600 italic">"{c.extraMessage}" 💕</p>
+					<div class="bg-pink-50 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-6">
+						<p class="text-gray-600 italic text-sm sm:text-base">"{c.extraMessage}" 💕</p>
 					</div>
 				{/if}
 
-				<div class="text-4xl mb-6" aria-hidden="true">
+				<div class="text-3xl sm:text-4xl mb-4 sm:mb-6" aria-hidden="true">
 					✨🌹💕🌸💖✨
 				</div>
 
 				<!-- Action Buttons -->
-				<div class="flex flex-wrap gap-3 justify-center">
+				<div class="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 justify-center">
 					<button
-						class="btn btn-primary rounded-full gap-1 shadow-md"
+						class="btn btn-primary rounded-full gap-1 shadow-md w-full sm:w-auto"
 						onclick={shareResult}
 						aria-label="Share this happy moment"
 					>
 						📱 Share the Joy!
 					</button>
 					<button
-						class="btn btn-secondary rounded-full gap-1 shadow-md"
+						class="btn btn-secondary rounded-full gap-1 shadow-md w-full sm:w-auto"
 						onclick={takeScreenshot}
 						aria-label="Take a screenshot of this moment"
 					>
@@ -342,7 +353,7 @@
 				</div>
 
 				<!-- Social Share Links -->
-				<div class="flex flex-wrap gap-3 justify-center mt-6">
+				<div class="flex flex-wrap gap-2 sm:gap-3 justify-center mt-4 sm:mt-6">
 					{#each ['twitter', 'whatsapp', 'facebook', 'telegram'] as platform}
 						<a
 							href={getShareUrl(platform, `${c.crushName} said YES on Love Sent! 💖🎉`, typeof window !== 'undefined' ? window.location.href : `https://lovesent.me/confess/${c.uniqueSlug}`)}
@@ -357,7 +368,7 @@
 					{/each}
 				</div>
 
-				<p class="text-sm text-gray-400 mt-6">
+				<p class="text-xs sm:text-sm text-gray-400 mt-4 sm:mt-6">
 					Love is in the air! 🌹 — <a href="/" class="text-pink-500 underline">lovesent.me</a>
 				</p>
 			</div>

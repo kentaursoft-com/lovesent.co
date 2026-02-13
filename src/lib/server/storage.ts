@@ -1,7 +1,6 @@
-// ===== Storage Module for Backblaze B2 =====
-// Handles photo uploads for confession pages
-
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+// ===== Storage Module for Backblaze B2 (Native API) =====
+// Uses B2 native REST API — guaranteed to work in Cloudflare Workers
+// No external SDK dependencies required
 
 interface StorageEnv {
 	BACKBLAZE_KEY_ID?: string;
@@ -23,34 +22,117 @@ export function validateImage(file: File): { valid: boolean; error?: string } {
 	return { valid: true };
 }
 
-// Upload to Backblaze B2 via S3-compatible API
+// Step 1: Authorize with B2
+async function b2Authorize(keyId: string, appKey: string): Promise<{
+	authorizationToken: string;
+	apiUrl: string;
+	downloadUrl: string;
+	allowed: { bucketId?: string; bucketName?: string };
+}> {
+	const resp = await fetch('https://api.backblazeb2.com/b2api/v2/b2_authorize_account', {
+		method: 'GET',
+		headers: {
+			Authorization: `Basic ${btoa(`${keyId}:${appKey}`)}`
+		}
+	});
+
+	if (!resp.ok) {
+		const err = await resp.text();
+		throw new Error(`B2 auth failed: ${resp.status} ${err}`);
+	}
+
+	return resp.json();
+}
+
+// Step 2: Get upload URL for a bucket
+async function b2GetUploadUrl(
+	apiUrl: string,
+	authToken: string,
+	bucketId: string
+): Promise<{ uploadUrl: string; authorizationToken: string }> {
+	const resp = await fetch(`${apiUrl}/b2api/v2/b2_get_upload_url`, {
+		method: 'POST',
+		headers: {
+			Authorization: authToken,
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({ bucketId })
+	});
+
+	if (!resp.ok) {
+		const err = await resp.text();
+		throw new Error(`B2 get upload URL failed: ${resp.status} ${err}`);
+	}
+
+	return resp.json();
+}
+
+// Step 3: Upload file to B2
+async function b2UploadFile(
+	uploadUrl: string,
+	authToken: string,
+	fileName: string,
+	data: ArrayBuffer,
+	contentType: string
+): Promise<{ fileName: string; fileId: string }> {
+	// Compute SHA-1 hash of the file
+	const sha1Buffer = await crypto.subtle.digest('SHA-1', data);
+	const sha1Hex = Array.from(new Uint8Array(sha1Buffer))
+		.map((b) => b.toString(16).padStart(2, '0'))
+		.join('');
+
+	const resp = await fetch(uploadUrl, {
+		method: 'POST',
+		headers: {
+			Authorization: authToken,
+			'X-Bz-File-Name': encodeURIComponent(fileName),
+			'Content-Type': contentType,
+			'Content-Length': String(data.byteLength),
+			'X-Bz-Content-Sha1': sha1Hex
+		},
+		body: data
+	});
+
+	if (!resp.ok) {
+		const err = await resp.text();
+		throw new Error(`B2 upload failed: ${resp.status} ${err}`);
+	}
+
+	return resp.json();
+}
+
+// Upload to Backblaze B2 via native API
 export async function uploadToBackblaze(
 	env: StorageEnv,
 	key: string,
 	data: ArrayBuffer,
 	contentType: string
 ): Promise<string> {
-	const s3 = new S3Client({
-		region: 'us-west-000',
-		endpoint: 'https://s3.us-west-000.backblazeb2.com',
-		credentials: {
-			accessKeyId: env.BACKBLAZE_KEY_ID || '',
-			secretAccessKey: env.BACKBLAZE_APP_KEY || ''
-		}
-	});
-
+	const keyId = env.BACKBLAZE_KEY_ID || '';
+	const appKey = env.BACKBLAZE_APP_KEY || '';
 	const bucketName = env.BACKBLAZE_BUCKET_NAME || 'lovesent-photos';
 
-	await s3.send(
-		new PutObjectCommand({
-			Bucket: bucketName,
-			Key: key,
-			Body: new Uint8Array(data),
-			ContentType: contentType
-		})
-	);
+	if (!keyId || !appKey) {
+		throw new Error('Backblaze B2 credentials not configured');
+	}
 
-	return `https://f000.backblazeb2.com/file/${bucketName}/${key}`;
+	// Authorize
+	const auth = await b2Authorize(keyId, appKey);
+
+	// Get bucketId — use the one from auth if key is bucket-scoped
+	const bucketId = auth.allowed?.bucketId;
+	if (!bucketId) {
+		throw new Error('B2 key must be scoped to a bucket, or set BACKBLAZE_BUCKET_ID');
+	}
+
+	// Get upload URL
+	const uploadInfo = await b2GetUploadUrl(auth.apiUrl, auth.authorizationToken, bucketId);
+
+	// Upload
+	await b2UploadFile(uploadInfo.uploadUrl, uploadInfo.authorizationToken, key, data, contentType);
+
+	// Return the friendly download URL
+	return `${auth.downloadUrl}/file/${bucketName}/${key}`;
 }
 
 // Upload a photo for a confession page
