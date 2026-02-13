@@ -27,6 +27,7 @@ async function b2Authorize(keyId: string, appKey: string): Promise<{
 	authorizationToken: string;
 	apiUrl: string;
 	downloadUrl: string;
+	accountId?: string;
 	allowed: { bucketId?: string; bucketName?: string };
 }> {
 	const resp = await fetch('https://api.backblazeb2.com/b2api/v2/b2_authorize_account', {
@@ -44,7 +45,40 @@ async function b2Authorize(keyId: string, appKey: string): Promise<{
 	return resp.json();
 }
 
-// Step 2: Get upload URL for a bucket
+// Step 2: List buckets to find bucket ID by name
+async function b2ListBuckets(
+	apiUrl: string,
+	authToken: string,
+	accountId: string,
+	bucketName: string
+): Promise<string> {
+	const resp = await fetch(`${apiUrl}/b2api/v2/b2_list_buckets`, {
+		method: 'POST',
+		headers: {
+			Authorization: authToken,
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({ accountId, bucketName })
+	});
+
+	if (!resp.ok) {
+		const err = await resp.text();
+		throw new Error(`B2 list buckets failed: ${resp.status} ${err}`);
+	}
+
+	const data: { buckets: Array<{ bucketId: string; bucketName: string }> } = await resp.json();
+	const bucket = data.buckets.find((b) => b.bucketName === bucketName);
+	
+	if (!bucket) {
+		throw new Error(
+			`B2 bucket '${bucketName}' not found. Available buckets: ${data.buckets.map(b => b.bucketName).join(', ')}`
+		);
+	}
+	
+	return bucket.bucketId;
+}
+4
+// Step 3: Get upload URL for a bucket
 async function b2GetUploadUrl(
 	apiUrl: string,
 	authToken: string,
@@ -119,10 +153,14 @@ export async function uploadToBackblaze(
 	// Authorize
 	const auth = await b2Authorize(keyId, appKey);
 
-	// Get bucketId — use the one from auth if key is bucket-scoped
-	const bucketId = auth.allowed?.bucketId;
+	// Get bucketId — use the one from auth if key is bucket-scoped, otherwise look it up
+	let bucketId = auth.allowed?.bucketId;
 	if (!bucketId) {
-		throw new Error('B2 key must be scoped to a bucket, or set BACKBLAZE_BUCKET_ID');
+		// Key is not bucket-scoped, so we need to list buckets and find ours by name
+		if (!auth.accountId) {
+			throw new Error('B2 auth response missing accountId');
+		}
+		bucketId = await b2ListBuckets(auth.apiUrl, auth.authorizationToken, auth.accountId, bucketName);
 	}
 
 	// Get upload URL
